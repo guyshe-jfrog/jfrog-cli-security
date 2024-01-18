@@ -10,17 +10,20 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jfrog/jfrog-cli-security/scangraph"
+	"golang.org/x/exp/slices"
+
+	rtutils "github.com/jfrog/jfrog-cli-core/v2/artifactory/utils"
+	"github.com/jfrog/jfrog-cli-core/v2/xray/scangraph"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-cli-core/v2/common/format"
-	outputFormat "github.com/jfrog/jfrog-cli-core/v2/common/format"
 	"github.com/jfrog/jfrog-cli-core/v2/common/spec"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
-	"github.com/jfrog/jfrog-cli-security/formats"
-	xrutils "github.com/jfrog/jfrog-cli-security/utils"
+	"github.com/jfrog/jfrog-cli-core/v2/xray/formats"
+	xrutils "github.com/jfrog/jfrog-cli-core/v2/xray/utils"
 	"github.com/jfrog/jfrog-client-go/artifactory/services/fspatterns"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
@@ -46,7 +49,7 @@ type ScanCommand struct {
 	// The location of the downloaded Xray indexer binary on the local file system.
 	indexerPath            string
 	indexerTempDir         string
-	outputFormat           outputFormat.OutputFormat
+	outputFormat           format.OutputFormat
 	projectKey             string
 	minSeverityFilter      string
 	watches                []string
@@ -78,7 +81,7 @@ func (scanCmd *ScanCommand) SetThreads(threads int) *ScanCommand {
 	return scanCmd
 }
 
-func (scanCmd *ScanCommand) SetOutputFormat(format outputFormat.OutputFormat) *ScanCommand {
+func (scanCmd *ScanCommand) SetOutputFormat(format format.OutputFormat) *ScanCommand {
 	scanCmd.outputFormat = format
 	return scanCmd
 }
@@ -248,6 +251,23 @@ func (scanCmd *ScanCommand) Run() (err error) {
 	scanResults := xrutils.NewAuditResults()
 	scanResults.XrayVersion = xrayVersion
 	scanResults.ScaResults = []xrutils.ScaScanResult{{XrayResults: flatResults}}
+
+	scanResults.ExtendedScanResults.EntitledForJas, err = xrutils.IsEntitledForJas(xrayManager, xrayVersion)
+	errGroup := new(errgroup.Group)
+	if scanResults.ExtendedScanResults.EntitledForJas {
+		// Download (if needed) the analyzer manager in a background routine.
+		errGroup.Go(rtutils.DownloadAnalyzerManagerIfNeeded)
+	}
+	// Wait for the Download of the AnalyzerManager to complete.
+	if err = errGroup.Wait(); err != nil {
+		err = errors.New("failed while trying to get Analyzer Manager: " + err.Error())
+	}
+
+	if scanResults.ExtendedScanResults.EntitledForJas {
+		cveList := cveListFromVulnerabilities(flatResults)
+		workingDirs := []string{scanCmd.spec.Files[0].Pattern}
+		scanResults.JasError = runJasScannersAndSetResults(scanResults, cveList, scanCmd.serverDetails, workingDirs)
+	}
 
 	if err = xrutils.NewResultsWriter(scanResults).
 		SetOutputFormat(scanCmd.outputFormat).
@@ -454,6 +474,20 @@ func appendErrorSlice(scanErrors []formats.SimpleJsonError, errorsToAdd [][]form
 	return scanErrors
 }
 
-func ConditionalUploadDefaultScanFunc(serverDetails *config.ServerDetails, fileSpec *spec.SpecFiles, threads int, scanOutputFormat format.OutputFormat) error {
-	return NewScanCommand().SetServerDetails(serverDetails).SetSpec(fileSpec).SetThreads(threads).SetOutputFormat(scanOutputFormat).SetFail(true).SetPrintExtendedTable(false).Run()
+func cveListFromVulnerabilities(flatResults []services.ScanResponse) []string {
+	var cveList []string
+	var technologiesList []string
+	for _, result := range flatResults {
+		for _, vulnerability := range result.Vulnerabilities {
+			for _, cve := range vulnerability.Cves {
+				if !slices.Contains(cveList, cve.Id) && (cve.Id != "") {
+					cveList = append(cveList, cve.Id)
+				}
+			}
+			if !slices.Contains(technologiesList, vulnerability.Technology) && (vulnerability.Technology != "") {
+				technologiesList = append(technologiesList, vulnerability.Technology)
+			}
+		}
+	}
+	return cveList
 }

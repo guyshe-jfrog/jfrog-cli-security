@@ -5,15 +5,14 @@ import (
 	"os"
 
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
-	"github.com/jfrog/jfrog-cli-security/scangraph"
-	"github.com/jfrog/jfrog-cli-security/utils"
+	"github.com/jfrog/jfrog-cli-core/v2/utils/dependencies"
+	"github.com/jfrog/jfrog-cli-core/v2/xray/scangraph"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/xray"
 	"github.com/jfrog/jfrog-client-go/xray/services"
 	"golang.org/x/sync/errgroup"
 
-	xrayutils "github.com/jfrog/jfrog-cli-security/utils"
+	xrayutils "github.com/jfrog/jfrog-cli-core/v2/xray/utils"
 )
 
 type AuditCommand struct {
@@ -83,8 +82,6 @@ func (auditCmd *AuditCommand) CreateXrayGraphScanParams() *services.XrayGraphSca
 }
 
 func (auditCmd *AuditCommand) Run() (err error) {
-	// If no workingDirs were provided by the user, we apply a recursive scan on the root repository
-	isRecursiveScan := len(auditCmd.workingDirs) == 0
 	workingDirs, err := coreutils.GetFullPathsWorkingDirs(auditCmd.workingDirs)
 	if err != nil {
 		return
@@ -96,8 +93,7 @@ func (auditCmd *AuditCommand) Run() (err error) {
 		SetFixableOnly(auditCmd.fixableOnly).
 		SetGraphBasicParams(auditCmd.AuditBasicParams).
 		SetThirdPartyApplicabilityScan(auditCmd.thirdPartyApplicabilityScan).
-		SetExclusions(auditCmd.exclusions).
-		SetIsRecursiveScan(isRecursiveScan)
+		SetExclusions(auditCmd.exclusions)
 	auditResults, err := RunAudit(auditParams)
 	if err != nil {
 		return
@@ -160,7 +156,7 @@ func RunAudit(auditParams *AuditParams) (results *xrayutils.Results, err error) 
 		return
 	}
 	results.XrayVersion = auditParams.xrayVersion
-	results.ExtendedScanResults.EntitledForJas, err = isEntitledForJas(xrayManager, auditParams.xrayVersion)
+	results.ExtendedScanResults.EntitledForJas, err = xrayutils.IsEntitledForJas(xrayManager, auditParams.xrayVersion)
 	if err != nil {
 		return
 	}
@@ -168,7 +164,7 @@ func RunAudit(auditParams *AuditParams) (results *xrayutils.Results, err error) 
 	errGroup := new(errgroup.Group)
 	if results.ExtendedScanResults.EntitledForJas {
 		// Download (if needed) the analyzer manager in a background routine.
-		errGroup.Go(utils.DownloadAnalyzerManagerIfNeeded)
+		errGroup.Go(dependencies.DownloadAnalyzerManagerIfNeeded)
 	}
 
 	// The sca scan doesn't require the analyzer manager, so it can run separately from the analyzer manager download routine.
@@ -183,14 +179,5 @@ func RunAudit(auditParams *AuditParams) (results *xrayutils.Results, err error) 
 	if results.ExtendedScanResults.EntitledForJas {
 		results.JasError = runJasScannersAndSetResults(results, auditParams.DirectDependencies(), serverDetails, auditParams.workingDirs, auditParams.Progress(), auditParams.xrayGraphScanParams.MultiScanId, auditParams.thirdPartyApplicabilityScan)
 	}
-	return
-}
-
-func isEntitledForJas(xrayManager *xray.XrayServicesManager, xrayVersion string) (entitled bool, err error) {
-	if e := clientutils.ValidateMinimumVersion(clientutils.Xray, xrayVersion, xrayutils.EntitlementsMinVersion); e != nil {
-		log.Debug(e)
-		return
-	}
-	entitled, err = xrayManager.IsEntitled(xrayutils.ApplicabilityFeatureId)
 	return
 }

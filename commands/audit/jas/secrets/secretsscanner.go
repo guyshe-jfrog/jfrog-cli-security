@@ -5,21 +5,23 @@ import (
 	"strings"
 
 	jfrogappsconfig "github.com/jfrog/jfrog-apps-config/go"
-	"github.com/jfrog/jfrog-cli-security/commands/audit/jas"
-	"github.com/jfrog/jfrog-cli-security/utils"
+	"github.com/jfrog/jfrog-cli-core/v2/xray/commands/audit/jas"
+	"github.com/jfrog/jfrog-cli-core/v2/xray/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/owenrumney/go-sarif/v2/sarif"
 )
 
 const (
-	secretsScanCommand   = "sec"
-	secretsScannerType   = "secrets-scan"
-	secretsDocsUrlSuffix = "secrets"
+	secretsScanCommand           = "sec"
+	SecretsScannerType           = "secrets-scan"        // #nosec
+	SecretsScannerDockerScanType = "secrets-docker-scan" // #nosec
+	secretsDocsUrlSuffix         = "secrets"
 )
 
 type SecretScanManager struct {
 	secretsScannerResults []*sarif.Run
 	scanner               *jas.JasScanner
+	scanType              string
 }
 
 // The getSecretsScanResults function runs the secrets scan flow, which includes the following steps:
@@ -29,8 +31,8 @@ type SecretScanManager struct {
 // Return values:
 // []utils.IacOrSecretResult: a list of the secrets that were found.
 // error: An error object (if any).
-func RunSecretsScan(scanner *jas.JasScanner) (results []*sarif.Run, err error) {
-	secretScanManager := newSecretsScanManager(scanner)
+func RunSecretsScan(scanner *jas.JasScanner, scanType string) (results []*sarif.Run, err error) {
+	secretScanManager := newSecretsScanManager(scanner, scanType)
 	log.Info("Running secrets scanning...")
 	if err = secretScanManager.scanner.Run(secretScanManager); err != nil {
 		err = utils.ParseAnalyzerManagerError(utils.Secrets, err)
@@ -43,10 +45,11 @@ func RunSecretsScan(scanner *jas.JasScanner) (results []*sarif.Run, err error) {
 	return
 }
 
-func newSecretsScanManager(scanner *jas.JasScanner) (manager *SecretScanManager) {
+func newSecretsScanManager(scanner *jas.JasScanner, scanType string) (manager *SecretScanManager) {
 	return &SecretScanManager{
 		secretsScannerResults: []*sarif.Run{},
 		scanner:               scanner,
+		scanType:              scanType,
 	}
 }
 
@@ -89,7 +92,7 @@ func (s *SecretScanManager) createConfigFile(module jfrogappsconfig.Module) erro
 			{
 				Roots:       roots,
 				Output:      s.scanner.ResultsFileName,
-				Type:        secretsScannerType,
+				Type:        s.scanType,
 				SkippedDirs: jas.GetExcludePatterns(module, module.Scanners.Secrets),
 			},
 		},
