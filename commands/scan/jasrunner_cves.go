@@ -20,8 +20,7 @@ func runJasScannersAndSetResults(scanResults *utils.Results, cveList []string,
 		log.Warn("To include 'Advanced Security' scan as part of the audit output, please run the 'jf c add' command before running this command.")
 		return
 	}
-	multiScanId := "" // Also empty for audit
-	scanner, err := jas.NewJasScanner(workingDirs, serverDetails, multiScanId)
+	scanner, err := jas.NewJasScanner(workingDirs, serverDetails)
 	if err != nil {
 		return
 	}
