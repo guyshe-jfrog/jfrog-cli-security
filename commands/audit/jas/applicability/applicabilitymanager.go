@@ -96,6 +96,18 @@ func newApplicabilityScanManagerCves(xrayScanResults []services.ScanResponse, cv
 
 func newApplicabilityScanManager(xrayScanResults []services.ScanResponse, directDependencies []string, scanner *jas.JasScanner, thirdPartyScan bool) (manager *ApplicabilityScanManager) {
 	directDependenciesCves, indirectDependenciesCves := extractDependenciesCvesFromScan(xrayScanResults, directDependencies)
+	print("directDependenciesCves:\n")
+	for i := range directDependenciesCves {
+		print(directDependenciesCves[i])
+		print("\n")
+	}
+	print("\n")
+	print("indirectDependenciesCves:")
+	for i := range indirectDependenciesCves {
+		print(indirectDependenciesCves[i])
+		print("\n")
+	}
+	print("\n")
 	return &ApplicabilityScanManager{
 		applicabilityScanResults: []*sarif.Run{},
 		directDependenciesCves:   directDependenciesCves,
@@ -180,12 +192,12 @@ func (asm *ApplicabilityScanManager) shouldRunApplicabilityScan(technologies []c
 	isTechScan := coreutils.ContainsApplicabilityScannableTech(technologies)
 
 	print("isTechScan\n")
-	print("%t\n", isTechScan)
+	print(isTechScan)
 	return asm.cvesExists() && isTechScan
 }
 
 func (asm *ApplicabilityScanManager) cvesExists() bool {
-	print("cves:\n")
+	print("\ncves:\n")
 	print(len(asm.indirectDependenciesCves))
 	print("\ndirectDependenciesCves:\n")
 	print(len(asm.directDependenciesCves))
