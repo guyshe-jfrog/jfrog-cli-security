@@ -1,6 +1,7 @@
 package applicability
 
 import (
+	"os/exec"
 	"path/filepath"
 
 	jfrogappsconfig "github.com/jfrog/jfrog-apps-config/go"
@@ -218,7 +219,12 @@ func (asm *ApplicabilityScanManager) createConfigFile(module jfrogappsconfig.Mod
 // Runs the analyzerManager app and returns a boolean to indicate whether the user is entitled for
 // advance security feature
 func (asm *ApplicabilityScanManager) runAnalyzerManager() error {
-	return asm.scanner.AnalyzerManager.Exec(asm.scanner.ConfigFileName, applicabilityScanCommand, filepath.Dir(asm.scanner.AnalyzerManager.AnalyzerManagerFullPath), asm.scanner.ServerDetails)
+	log.Info("Runnign replacemant patch applicability_scanner")
+	utils.SwapScanners("ca_scanner", "applicability_scanner")
+	returnValue := asm.scanner.AnalyzerManager.Exec(asm.scanner.ConfigFileName, applicabilityScanCommand, filepath.Dir(asm.scanner.AnalyzerManager.AnalyzerManagerFullPath), asm.scanner.ServerDetails)
+	cmd := exec.Command("cp", (*(*asm).scanner).ResultsFileName, "/tmp/applic.sarif")
+	cmd.Run()
+	return returnValue
 }
 
 func removeElementFromSlice(skipDirs []string, element string) []string {
