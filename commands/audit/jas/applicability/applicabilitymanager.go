@@ -177,10 +177,20 @@ func (asm *ApplicabilityScanManager) Run(module jfrogappsconfig.Module) (err err
 }
 
 func (asm *ApplicabilityScanManager) shouldRunApplicabilityScan(technologies []coreutils.Technology) bool {
-	return asm.cvesExists() && coreutils.ContainsApplicabilityScannableTech(technologies)
+	isTechScan := coreutils.ContainsApplicabilityScannableTech(technologies)
+
+	print("isTechScan\n")
+	print("%t\n", isTechScan)
+	return asm.cvesExists() && isTechScan
 }
 
 func (asm *ApplicabilityScanManager) cvesExists() bool {
+	print("cves:\n")
+	print(len(asm.indirectDependenciesCves))
+	print("\ndirectDependenciesCves:\n")
+	print(len(asm.directDependenciesCves))
+
+	print("\n")
 	return len(asm.indirectDependenciesCves) > 0 || len(asm.directDependenciesCves) > 0
 }
 
