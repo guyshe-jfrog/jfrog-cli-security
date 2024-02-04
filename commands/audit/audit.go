@@ -180,7 +180,9 @@ func RunAudit(auditParams *AuditParams) (results *xrayutils.Results, err error) 
 	}
 
 	// Run scanners only if the user is entitled for Advanced Security
+	print("Run scanners only if the user is entitled for Advanced Security\n")
 	if results.ExtendedScanResults.EntitledForJas {
+		print("Yay got EntitledForJas\n")
 		results.JasError = runJasScannersAndSetResults(results, auditParams.DirectDependencies(), serverDetails, auditParams.workingDirs, auditParams.Progress(), auditParams.thirdPartyApplicabilityScan)
 	}
 	return

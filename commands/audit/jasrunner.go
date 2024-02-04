@@ -17,9 +17,11 @@ import (
 func runJasScannersAndSetResults(scanResults *utils.Results, directDependencies []string,
 	serverDetails *config.ServerDetails, workingDirs []string, progress io.ProgressMgr, thirdPartyApplicabilityScan bool) (err error) {
 	if serverDetails == nil || len(serverDetails.Url) == 0 {
+		print("To include 'Advanced Security' scan as part of the audit output, please run the 'jf c add\n")
 		log.Warn("To include 'Advanced Security' scan as part of the audit output, please run the 'jf c add' command before running this command.")
 		return
 	}
+	print("New jas scanner\n")
 	scanner, err := jas.NewJasScanner(workingDirs, serverDetails)
 	if err != nil {
 		return
@@ -28,6 +30,7 @@ func runJasScannersAndSetResults(scanResults *utils.Results, directDependencies 
 		cleanup := scanner.ScannerDirCleanupFunc
 		err = errors.Join(err, cleanup())
 	}()
+	print("before Running applicability scanning\n")
 	if progress != nil {
 		progress.SetHeadlineMsg("Running applicability scanning")
 	}
@@ -35,10 +38,12 @@ func runJasScannersAndSetResults(scanResults *utils.Results, directDependencies 
 	if err != nil {
 		return
 	}
+	print("After Running applicability scanning\n")
 	// Don't execute other scanners when scanning third party dependencies.
 	if thirdPartyApplicabilityScan {
 		return
 	}
+	print("BeforeRunning secrets scanning\n")
 	if progress != nil {
 		progress.SetHeadlineMsg("Running secrets scanning")
 	}

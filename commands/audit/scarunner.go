@@ -129,6 +129,9 @@ func executeScaScan(serverDetails *config.ServerDetails, params *AuditParams, sc
 	if flattenTree == nil || len(flattenTree.Nodes) == 0 {
 		return errorutils.CheckErrorf("no dependencies were found. Please try to build your project and re-run the audit command")
 	}
+
+	print("Scan the dependency tree\n")
+
 	// Scan the dependency tree.
 	scanResults, xrayErr := runScaWithTech(scan.Technology, params, serverDetails, flattenTree, fullDependencyTrees)
 	if xrayErr != nil {
