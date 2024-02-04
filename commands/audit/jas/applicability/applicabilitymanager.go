@@ -47,11 +47,15 @@ type ApplicabilityScanManager struct {
 func RunApplicabilityScan(xrayResults []services.ScanResponse, directDependencies []string,
 	scannedTechnologies []coreutils.Technology, scanner *jas.JasScanner, thirdPartyContextualAnalysis bool) (results []*sarif.Run, err error) {
 	applicabilityScanManager := newApplicabilityScanManager(xrayResults, directDependencies, scanner, thirdPartyContextualAnalysis)
+	print("Before The technologies that have been scanned are currently not supported for contextual analysis scanning\n")
 	if !applicabilityScanManager.shouldRunApplicabilityScan(scannedTechnologies) {
+		print("The technologies that have been scanned are currently not supported for contextual analysis scanning\n")
 		log.Debug("The technologies that have been scanned are currently not supported for contextual analysis scanning, or we couldn't find any vulnerable dependencies. Skipping....")
 		return
 	}
+	print("applicabilityScanManager.scanner.Run(applicabilityScanManager\n")
 	if err = applicabilityScanManager.scanner.Run(applicabilityScanManager); err != nil {
+		print("ParseAnalyzerManagerError\n")
 		err = utils.ParseAnalyzerManagerError(utils.Applicability, err)
 		return
 	}
@@ -146,9 +150,12 @@ func isDirectComponents(components []string, directDependencies []string) bool {
 }
 
 func (asm *ApplicabilityScanManager) Run(module jfrogappsconfig.Module) (err error) {
+	print("before ShouldSkipScanner\b")
 	if jas.ShouldSkipScanner(module, utils.Applicability) {
+		print("got ShouldSkipScanner\b")
 		return
 	}
+	print("Running applicability scanning in\b")
 	if len(asm.scanner.JFrogAppsConfig.Modules) > 1 {
 		log.Info("Running applicability scanning in the", module.SourceRoot, "directory...")
 	} else {
@@ -157,6 +164,7 @@ func (asm *ApplicabilityScanManager) Run(module jfrogappsconfig.Module) (err err
 	if err = asm.createConfigFile(module); err != nil {
 		return
 	}
+	print("Before runAnalyzerManager\b")
 	if err = asm.runAnalyzerManager(); err != nil {
 		return
 	}
