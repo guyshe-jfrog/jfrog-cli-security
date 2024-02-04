@@ -1,6 +1,7 @@
 package applicability
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -220,9 +221,29 @@ func (asm *ApplicabilityScanManager) createConfigFile(module jfrogappsconfig.Mod
 // advance security feature
 func (asm *ApplicabilityScanManager) runAnalyzerManager() error {
 	log.Info("Runnign replacemant patch applicability_scanner")
+	print("Runnig replacement")
 	utils.SwapScanners("ca_scanner", "applicability_scanner")
+
+	print(filepath.Join(os.Getenv("HOME"), ".jfrog/dependencies/analyzerManager/ca_scanner"))
+	print("replacement done\n")
+	cmd := exec.Command("ls", filepath.Join(os.Getenv("HOME"), ".jfrog/dependencies/analyzerManager/ca_scanner"))
+	output, _ := cmd.CombinedOutput()
+	cmd.Run()
+	print(string(output))
+
+	cmd = exec.Command(filepath.Join(os.Getenv("HOME"), ".jfrog/dependencies/analyzerManager/ca_scanner/applicability_scanner"), "version")
+	output, _ = cmd.CombinedOutput()
+	cmd.Run()
+	print(string(output))
+
 	returnValue := asm.scanner.AnalyzerManager.Exec(asm.scanner.ConfigFileName, applicabilityScanCommand, filepath.Dir(asm.scanner.AnalyzerManager.AnalyzerManagerFullPath), asm.scanner.ServerDetails)
-	cmd := exec.Command("cp", (*(*asm).scanner).ResultsFileName, "/tmp/applic.sarif")
+	print("post run")
+	cmd = exec.Command("ls", filepath.Join(os.Getenv("HOME"), ".jfrog/dependencies/analyzerManager/ca_scanner"))
+	output, _ = cmd.CombinedOutput()
+	cmd.Run()
+	print(string(output))
+
+	cmd = exec.Command("cp", (*(*asm).scanner).ResultsFileName, "/tmp/applic.sarif")
 	cmd.Run()
 	return returnValue
 }
