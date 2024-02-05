@@ -14,33 +14,38 @@ const (
 )
 
 func RunScanGraphAndGetResults(params *ScanGraphParams) (*services.ScanResponse, error) {
+	print("I AM IN RunScanGraphAndGetResults\n")
 	xrayManager, err := utils.CreateXrayServiceManager(params.serverDetails)
 	if err != nil {
 		return nil, err
 	}
 
+	print("Before validate minimum version\n")
 	err = clientutils.ValidateMinimumVersion(clientutils.Xray, params.xrayVersion, ScanTypeMinXrayVersion)
 	if err != nil {
 		// Remove scan type param if Xray version is under the minimum supported version
 		params.xrayGraphScanParams.ScanType = ""
 	}
 
+	print("After validate minimum version\n")
 	if params.xrayGraphScanParams.XscGitInfoContext != nil {
 		if params.xrayGraphScanParams.XscVersion, err = xrayManager.XscEnabled(); err != nil {
 			return nil, err
 		}
 	}
 
+	print("Before scan graph\n")
 	scanId, err := xrayManager.ScanGraph(*params.xrayGraphScanParams)
 	if err != nil {
 		return nil, err
 	}
-
+	print("After scan graph\n")
 	xscEnabled := params.xrayGraphScanParams.XscVersion != ""
 	scanResult, err := xrayManager.GetScanGraphResults(scanId, params.XrayGraphScanParams().IncludeVulnerabilities, params.XrayGraphScanParams().IncludeLicenses, xscEnabled)
 	if err != nil {
 		return nil, err
 	}
+	print("xrayManager.GetScanGraphResults\n")
 	return filterResultIfNeeded(scanResult, params), nil
 }
 
