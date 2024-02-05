@@ -133,6 +133,7 @@ func extractDependenciesCvesFromScan(xrayScanResults []services.ScanResponse, di
 	directCvesSet := datastructures.MakeSet[string]()
 	indirectCvesSet := datastructures.MakeSet[string]()
 	for _, scanResult := range xrayScanResults {
+
 		for _, vulnerability := range scanResult.Vulnerabilities {
 			if isDirectComponents(maps.Keys(vulnerability.Components), directDependencies) {
 				addCvesToSet(vulnerability.Cves, directCvesSet)

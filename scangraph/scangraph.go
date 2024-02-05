@@ -1,6 +1,7 @@
 package scangraph
 
 import (
+	"github.com/davecgh/go-spew/spew"
 	"github.com/jfrog/jfrog-cli-security/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/xray/services"
@@ -46,7 +47,12 @@ func RunScanGraphAndGetResults(params *ScanGraphParams) (*services.ScanResponse,
 		return nil, err
 	}
 	print("xrayManager.GetScanGraphResults\n")
-	return filterResultIfNeeded(scanResult, params), nil
+	// print(fmt.Sprintf("scanResult:\n%#v\n", scanResult))
+	print(spew.Sdump(scanResult))
+	returnValue := filterResultIfNeeded(scanResult, params)
+	print("returnvalue:\n")
+	print(spew.Sdump(scanResult))
+	return returnValue, nil
 }
 
 func filterResultIfNeeded(scanResult *services.ScanResponse, params *ScanGraphParams) *services.ScanResponse {

@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"fmt"
-
 	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	clientconfig "github.com/jfrog/jfrog-client-go/config"
 	"github.com/jfrog/jfrog-client-go/xray"
@@ -13,9 +11,9 @@ func CreateXrayServiceManager(serviceDetails *config.ServerDetails) (*xray.XrayS
 	if err != nil {
 		return nil, err
 	}
-	print(xrayDetails.GetUrl())
-	tmp := fmt.Sprintf("\n%v\n", xrayDetails)
-	print(tmp)
+	// print(xrayDetails.GetUrl())
+	// tmp := fmt.Sprintf("\n%v\n", xrayDetails)
+	// print(tmp)
 	serviceConfig, err := clientconfig.NewConfigBuilder().
 		SetServiceDetails(xrayDetails).
 		Build()
