@@ -3,16 +3,17 @@ package scan
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+
 	"github.com/jfrog/jfrog-cli-core/v2/common/spec"
 	xrayutils "github.com/jfrog/jfrog-cli-security/utils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
 )
 
 const (
@@ -22,8 +23,9 @@ const (
 
 type DockerScanCommand struct {
 	ScanCommand
-	imageTag       string
-	targetRepoPath string
+	imageTag          string
+	targetRepoPath    string
+	imageTarePath string
 }
 
 func NewDockerScanCommand() *DockerScanCommand {
@@ -66,14 +68,20 @@ func (dsc *DockerScanCommand) Run() (err error) {
 	if dsc.progress != nil {
 		dsc.progress.SetHeadlineMsg("Creating image archive 📦")
 	}
-	log.Info("Creating image archive...")
-	imageTarPath := filepath.Join(tempDirPath, "image.tar")
-	dockerSaveCmd := exec.Command("docker", "save", dsc.imageTag, "-o", imageTarPath)
-	var stderr bytes.Buffer
-	dockerSaveCmd.Stderr = &stderr
-	err = dockerSaveCmd.Run()
-	if err != nil {
-		return fmt.Errorf("failed running command: '%s' with error: %s - %s", strings.Join(dockerSaveCmd.Args, " "), err.Error(), stderr.String())
+	imageTarPath != -
+	if dsc.imageTarePath != "" {
+		//handle
+	} else {
+
+		log.Info("Creating image archive...")
+		imageTarPath := filepath.Join(tempDirPath, "image.tar")
+		dockerSaveCmd := exec.Command("docker", "save", dsc.imageTag, "-o", imageTarPath)
+		var stderr bytes.Buffer
+		dockerSaveCmd.Stderr = &stderr
+		err = dockerSaveCmd.Run()
+		if err != nil {
+			return fmt.Errorf("failed running command: '%s' with error: %s - %s", strings.Join(dockerSaveCmd.Args, " "), err.Error(), stderr.String())
+		}
 	}
 
 	// Perform scan on image.tar

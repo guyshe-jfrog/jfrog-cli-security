@@ -82,6 +82,7 @@ const (
 	scanRegexp          = scanPrefix + RegexpFlag
 	scanAnt             = scanPrefix + AntFlag
 	OutputFormat        = "format"
+	UseTar              = "tar"
 	BypassArchiveLimits = "bypass-archive-limits"
 	Watches             = "watches"
 	RepoPath            = "repo-path"
@@ -120,7 +121,7 @@ var commandFlags = map[string][]string{
 		url, user, password, accessToken, ServerId, Project, Vuln, OutputFormat, Fail, ExtendedTable, Rescan,
 	},
 	DockerScan: {
-		ServerId, Project, Watches, RepoPath, Licenses, OutputFormat, Fail, ExtendedTable, BypassArchiveLimits, MinSeverity, FixableOnly,
+		ServerId, Project, Watches, RepoPath, Licenses, OutputFormat, Fail, ExtendedTable, BypassArchiveLimits, MinSeverity, FixableOnly, UseTar,
 	},
 	Audit: {
 		url, user, password, accessToken, ServerId, InsecureTls, Project, Watches, RepoPath, Licenses, OutputFormat, ExcludeTestDeps,
@@ -181,6 +182,7 @@ var flagsMap = map[string]components.Flag{
 		"Defines the output format of the command. Acceptable values are: table, json, simple-json and sarif. Note: the json format doesn't include information about scans that are included as part of the Advanced Security package.",
 		components.WithStrDefaultValue("table"),
 	),
+	UseTar:              components.NewBoolFlag(UseTar, "Lets you scan a already-saved docker save .tar file instrad of an image."),
 	Fail:                components.NewBoolFlag(Fail, "Set to false if you do not wish the command to return exit code 3, even if the 'Fail Build' rule is matched by Xray.", components.WithBoolDefaultValue(true)),
 	ExtendedTable:       components.NewBoolFlag(ExtendedTable, "Set to true if you'd like the table to include extended fields such as 'CVSS' & 'Xray Issue Id'. Ignored if provided 'format' is not 'table'."),
 	BypassArchiveLimits: components.NewBoolFlag(BypassArchiveLimits, "Set to true to bypass the indexer-app archive limits."),

@@ -437,6 +437,8 @@ func DockerScan(c *components.Context, image string) error {
 	if image == "" {
 		return printHelp()
 	}
+	print(c.GetBoolFlagValue(flags.UseTar))
+
 	// Run the command
 	serverDetails, err := createServerDetailsWithConfigOffer(c)
 	if err != nil {
@@ -455,6 +457,8 @@ func DockerScan(c *components.Context, image string) error {
 	if err != nil {
 		return err
 	}
+
+	// TODO fix that if this a tar dont do this, and do set file location
 	containerScanCommand.SetImageTag(image).
 		SetTargetRepoPath(addTrailingSlashToRepoPathIfNeeded(c)).
 		SetServerDetails(serverDetails).
