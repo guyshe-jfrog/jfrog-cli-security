@@ -13,6 +13,7 @@ import (
 )
 
 var mockDirectDependencies = []string{"issueId_2_direct_dependency", "issueId_1_direct_dependency"}
+var mockCves = []string{"CVE-00000", "CVE-000AA"}
 var mockMultiRootDirectDependencies = []string{"issueId_2_direct_dependency", "issueId_1_direct_dependency", "issueId_3_direct_dependency", "issueId_4_direct_dependency"}
 
 func TestNewApplicabilityScanManager_InputIsValid(t *testing.T) {
@@ -26,6 +27,21 @@ func TestNewApplicabilityScanManager_InputIsValid(t *testing.T) {
 		assert.NotEmpty(t, applicabilityManager.scanner.ConfigFileName)
 		assert.NotEmpty(t, applicabilityManager.scanner.ResultsFileName)
 		assert.Len(t, applicabilityManager.directDependenciesCves, 5)
+	}
+}
+
+func TestNewApplicabilityScanManager_Docker_InputIsValid(t *testing.T) {
+	scanner, cleanUp := jas.InitJasTest(t)
+	defer cleanUp()
+	// Act
+	applicabilityManager := newApplicabilityScanManagerCves(jas.FakeBasicXrayResults, mockCves, scanner)
+
+	// Assert
+	if assert.NotNil(t, applicabilityManager) {
+		assert.NotEmpty(t, applicabilityManager.scanner.ConfigFileName)
+		assert.NotEmpty(t, applicabilityManager.scanner.ResultsFileName)
+		print(applicabilityManager.directDependenciesCves)
+		assert.Len(t, applicabilityManager.directDependenciesCves, 2)
 	}
 }
 
@@ -306,6 +322,23 @@ func TestParseResults_ApplicableCveExist(t *testing.T) {
 	scanner, cleanUp := jas.InitJasTest(t)
 	defer cleanUp()
 	applicabilityManager := newApplicabilityScanManager(jas.FakeBasicXrayResults, mockDirectDependencies, scanner, false)
+	applicabilityManager.scanner.ResultsFileName = filepath.Join(jas.GetTestDataPath(), "applicability-scan", "applicable-cve-results.sarif")
+
+	// Act
+	var err error
+	applicabilityManager.applicabilityScanResults, err = jas.ReadJasScanRunsFromFile(applicabilityManager.scanner.ResultsFileName, scanner.JFrogAppsConfig.Modules[0].SourceRoot, applicabilityDocsUrlSuffix)
+
+	if assert.NoError(t, err) && assert.NotNil(t, applicabilityManager.applicabilityScanResults) {
+		assert.Len(t, applicabilityManager.applicabilityScanResults, 1)
+		assert.NotEmpty(t, applicabilityManager.applicabilityScanResults[0].Results)
+	}
+}
+
+func TestParseResults_DockerApplicableCveExist(t *testing.T) {
+	// Arrange
+	scanner, cleanUp := jas.InitJasTest(t)
+	defer cleanUp()
+	applicabilityManager := newApplicabilityScanManagerCves(jas.FakeBasicXrayResults, mockCves, scanner)
 	applicabilityManager.scanner.ResultsFileName = filepath.Join(jas.GetTestDataPath(), "applicability-scan", "applicable-cve-results.sarif")
 
 	// Act
