@@ -1,19 +1,20 @@
-package audit
+package runner
 
 import (
 	"errors"
+
 	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
-	"github.com/jfrog/jfrog-cli-security/commands/audit/jas"
-	"github.com/jfrog/jfrog-cli-security/commands/audit/jas/applicability"
-	"github.com/jfrog/jfrog-cli-security/commands/audit/jas/iac"
-	"github.com/jfrog/jfrog-cli-security/commands/audit/jas/sast"
-	"github.com/jfrog/jfrog-cli-security/commands/audit/jas/secrets"
+	"github.com/jfrog/jfrog-cli-security/jas"
+	"github.com/jfrog/jfrog-cli-security/jas/applicability"
+	"github.com/jfrog/jfrog-cli-security/jas/iac"
+	"github.com/jfrog/jfrog-cli-security/jas/sast"
+	"github.com/jfrog/jfrog-cli-security/jas/secrets"
 	"github.com/jfrog/jfrog-cli-security/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
-func runJasScannersAndSetResults(scanResults *utils.Results, directDependencies []string,
+func RunJasScannersAndSetResults(scanResults *utils.Results, directDependencies []string,
 	serverDetails *config.ServerDetails, workingDirs []string, progress io.ProgressMgr, thirdPartyApplicabilityScan bool) (err error) {
 	if serverDetails == nil || len(serverDetails.Url) == 0 {
 		log.Warn("To include 'Advanced Security' scan as part of the audit output, please run the 'jf c add' command before running this command.")
@@ -41,7 +42,7 @@ func runJasScannersAndSetResults(scanResults *utils.Results, directDependencies 
 	if progress != nil {
 		progress.SetHeadlineMsg("Running secrets scanning")
 	}
-	scanResults.ExtendedScanResults.SecretsScanResults, err = secrets.RunSecretsScan(scanner)
+	scanResults.ExtendedScanResults.SecretsScanResults, err = secrets.RunSecretsScan(scanner, secrets.SecretsScannerType)
 	if err != nil {
 		return
 	}
