@@ -10,8 +10,10 @@ import (
 	"regexp"
 	"strings"
 
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
+	"github.com/jfrog/jfrog-cli-security/jas/runner"
 	"github.com/jfrog/jfrog-cli-security/scangraph"
 	xrayUtils "github.com/jfrog/jfrog-client-go/xray/services/utils"
 	"golang.org/x/sync/errgroup"
@@ -249,7 +251,6 @@ func (scanCmd *ScanCommand) Run() (err error) {
 
 	scanResults := xrutils.NewAuditResults()
 	scanResults.XrayVersion = xrayVersion
-	scanResults.ScaResults = []xrutils.ScaScanResult{{XrayResults: flatResults}}
 
 	scanResults.ExtendedScanResults.EntitledForJas, err = xrutils.IsEntitledForJas(xrayManager, xrayVersion)
 	errGroup := new(errgroup.Group)
@@ -263,9 +264,15 @@ func (scanCmd *ScanCommand) Run() (err error) {
 	}
 
 	if scanResults.ExtendedScanResults.EntitledForJas {
-		cveList := cveListFromVulnerabilities(flatResults)
+		depsList := depsListFromVulnerabilities(flatResults)
+
+		for _, scanResult := range flatResults {
+			scanResults.ScaResults = append(scanResults.ScaResults, xrutils.ScaScanResult{XrayResults: []services.ScanResponse{scanResult}, Technology: coreutils.Technology(scanResult.ScannedPackageType)})
+		}
+
 		workingDirs := []string{scanCmd.spec.Files[0].Pattern}
-		scanResults.JasError = runJasScannersAndSetResults(scanResults, cveList, scanCmd.serverDetails, workingDirs)
+
+		scanResults.JasError = runner.RunJasScannersAndSetResults(scanResults, depsList, scanCmd.serverDetails, workingDirs, nil, false)
 	}
 
 	if err = xrutils.NewResultsWriter(scanResults).
@@ -473,22 +480,43 @@ func appendErrorSlice(scanErrors []formats.SimpleJsonError, errorsToAdd [][]form
 	return scanErrors
 }
 
-func cveListFromVulnerabilities(flatResults []services.ScanResponse) []string {
-	var cveList []string
-	var technologiesList []string
+// +func cveListFromVulnerabilities(flatResults []services.ScanResponse) []string {
+// 	+	var cveList []string
+// 	+	var technologiesList []string
+// 	+	for _, result := range flatResults {
+// 	+		for _, vulnerability := range result.Vulnerabilities {
+// 	+			for _, cve := range vulnerability.Cves {
+// 	+				if !slices.Contains(cveList, cve.Id) && (cve.Id != "") {
+// 	+					cveList = append(cveList, cve.Id)
+// 	+				}
+// 	+			}
+// 	+			if !slices.Contains(technologiesList, vulnerability.Technology) && (vulnerability.Technology != "") {
+// 	+				technologiesList = append(technologiesList, vulnerability.Technology)
+// 	+			}
+// 	+		}
+// 	+	}
+// 	+	return cveList
+
+func depsListFromVulnerabilities(flatResults []services.ScanResponse) []string {
+	var depsList []string
+	var technologiesList []coreutils.Technology
 	for _, result := range flatResults {
 		for _, vulnerability := range result.Vulnerabilities {
-			for _, cve := range vulnerability.Cves {
-				if !slices.Contains(cveList, cve.Id) && (cve.Id != "") {
-					cveList = append(cveList, cve.Id)
+			dependencies := maps.Keys(vulnerability.Components)
+			for _, dependency := range dependencies {
+				if !slices.Contains(depsList, dependency) {
+					depsList = append(depsList, dependency)
 				}
 			}
-			if !slices.Contains(technologiesList, vulnerability.Technology) && (vulnerability.Technology != "") {
-				technologiesList = append(technologiesList, vulnerability.Technology)
+
+			if !slices.Contains(technologiesList, coreutils.Technology(vulnerability.Technology)) && (vulnerability.Technology != "") {
+				technologiesList = append(technologiesList, coreutils.Technology(vulnerability.Technology))
 			}
+
 		}
+
 	}
-	return cveList
+	return depsList
 }
 
 func ConditionalUploadDefaultScanFunc(serverDetails *config.ServerDetails, fileSpec *spec.SpecFiles, threads int, scanOutputFormat format.OutputFormat) error {
