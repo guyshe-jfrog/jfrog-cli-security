@@ -43,6 +43,11 @@ func (dsc *DockerScanCommand) SetTargetRepoPath(repoPath string) *DockerScanComm
 	return dsc
 }
 
+func (dsc *DockerScanCommand) SetIsTar(isTar bool) *DockerScanCommand {
+	dsc.isTar = isTar
+	return dsc
+}
+
 func (dsc *DockerScanCommand) Run() (err error) {
 	// Validate Xray minimum version
 	_, xrayVersion, err := xray.CreateXrayServiceManagerAndGetVersion(dsc.ScanCommand.serverDetails)
@@ -66,19 +71,28 @@ func (dsc *DockerScanCommand) Run() (err error) {
 	}()
 
 	// Run the 'docker save' command, to create tar file from the docker image, and pass it to the indexer-app
-	if dsc.progress != nil {
-		dsc.progress.SetHeadlineMsg("Creating image archive 📦")
-	}
-	log.Info("Creating image archive...")
 	imageTarPath := filepath.Join(tempDirPath, "image.tar")
-	dockerSaveCmd := exec.Command("docker", "save", dsc.imageTag, "-o", imageTarPath)
-	var stderr bytes.Buffer
-	dockerSaveCmd.Stderr = &stderr
-	err = dockerSaveCmd.Run()
-	if err != nil {
-		return fmt.Errorf("failed running command: '%s' with error: %s - %s", strings.Join(dockerSaveCmd.Args, " "), err.Error(), stderr.String())
+	if dsc.isTar {
+		imageTarPath = dsc.imageTag
+		exists, err := fileutils.IsFileExists(dsc.imageTag, false)
+		if err != nil || !exists {
+			return fmt.Errorf("failed to determine if tar file provided exists")
+		}
 	}
 
+	if !dsc.isTar {
+		if dsc.progress != nil {
+			dsc.progress.SetHeadlineMsg("Creating image archive 📦")
+		}
+		log.Info("Creating image archive...")
+		dockerSaveCmd := exec.Command("docker", "save", dsc.imageTag, "-o", imageTarPath)
+		var stderr bytes.Buffer
+		dockerSaveCmd.Stderr = &stderr
+		err = dockerSaveCmd.Run()
+		if err != nil {
+			return fmt.Errorf("failed running command: '%s' with error: %s - %s", strings.Join(dockerSaveCmd.Args, " "), err.Error(), stderr.String())
+		}
+	}
 	// Perform scan on image.tar
 	dsc.analyticsMetricsService.AddGeneralEvent(dsc.analyticsMetricsService.CreateGeneralEvent(xscservices.CliProduct, xscservices.CliEventType))
 	dsc.SetSpec(spec.NewBuilder().
