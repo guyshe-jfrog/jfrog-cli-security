@@ -70,6 +70,7 @@ type ScanCommand struct {
 	printExtendedTable     bool
 	bypassArchiveLimits    bool
 	fixableOnly            bool
+	isTar                  bool
 	progress               ioUtils.ProgressMgr
 	commandSupportsJAS     bool
 }
@@ -325,6 +326,11 @@ func NewScanCommand() *ScanCommand {
 
 func (scanCmd *ScanCommand) CommandName() string {
 	return "xr_scan"
+}
+
+func (scanCmd *ScanCommand) SetIsTar(isTar bool) *ScanCommand {
+	scanCmd.isTar = isTar
+	return scanCmd
 }
 
 func (scanCmd *ScanCommand) prepareScanTasks(fileProducer, indexedFileProducer parallel.Runner, entitledForJas bool, resultsArr [][]*ScanInfo, fileErrors, indexedFileErrors [][]formats.SimpleJsonError, fileCollectingErrorsQueue *clientutils.ErrorsQueue, xrayVersion string) {
