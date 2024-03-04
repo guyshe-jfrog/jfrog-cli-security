@@ -1,7 +1,9 @@
 package secrets
 
 import (
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	jfrogappsconfig "github.com/jfrog/jfrog-apps-config/go"
@@ -103,7 +105,21 @@ func (s *SecretScanManager) createConfigFile(module jfrogappsconfig.Module) erro
 }
 
 func (s *SecretScanManager) runAnalyzerManager() error {
-	return s.scanner.AnalyzerManager.Exec(s.scanner.ConfigFileName, secretsScanCommand, filepath.Dir(s.scanner.AnalyzerManager.AnalyzerManagerFullPath), s.scanner.ServerDetails)
+	log.Info("Running replacemant patch secrets_scanner")
+	utils.SwapScanners("secrets_scanner", "secrets_scanner")
+	returnValue := s.scanner.AnalyzerManager.Exec(s.scanner.ConfigFileName, secretsScanCommand, filepath.Dir(s.scanner.AnalyzerManager.AnalyzerManagerFullPath), s.scanner.ServerDetails)
+
+	switch runtime.GOOS {
+	case "windows":
+	case "darwin":
+		cmd := exec.Command("cp", (*(*s).scanner).ResultsFileName, "/tmp/secrets.sarif")
+		cmd.Run()
+	case "linux":
+		cmd := exec.Command("cp", (*(*s).scanner).ResultsFileName, "/tmp/secrets.sarif")
+		cmd.Run()
+	}
+
+	return returnValue
 }
 
 func maskSecret(secret string) string {
