@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/jfrog/gofrog/unarchive"
+	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/xray"
@@ -68,7 +69,7 @@ func UnzipSource(source, destination string) error {
 
 		}
 
-		os.RemoveAll("C:\\Users\\admin\\.jfrog\\dependencies\\analyzerManager\\ca_scanner\\_internal\\capstone") //remove the path
+		// os.RemoveAll("C:\\Users\\admin\\.jfrog\\dependencies\\analyzerManager\\ca_scanner\\_internal\\capstone") //remove the path
 
 		if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
 			print("AWHDOASDOASO\n")
@@ -125,11 +126,16 @@ func copy(src, dst string) (int64, error) {
 func SwapScanners(destinationSuffixFolder string, destinationExecutableName string) {
 	exePath, _ := os.Executable()    // Get the executable file's path
 	dirPath := filepath.Dir(exePath) // Get the directory of the executable file
-	jfrogDir, err := GetAnalyzerManagerDirAbsolutePath()
+	analyzerManagerDir, err := GetAnalyzerManagerDirAbsolutePath()
 	if err != nil {
 		print("Error: can't get deps folder\n")
 	}
-	analyzerManagerPath := filepath.Join(jfrogDir, destinationSuffixFolder)
+	jfrogDirHome, err := coreutils.GetJfrogHomeDir()
+	if err != nil {
+		print("Error: can't get deps folder\n")
+	}
+
+	analyzerManagerPath := filepath.Join(analyzerManagerDir, destinationSuffixFolder)
 	print("switching executable directory:" + analyzerManagerPath + "\n")
 	err = os.RemoveAll(analyzerManagerPath) //remove the path
 
@@ -143,6 +149,13 @@ func SwapScanners(destinationSuffixFolder string, destinationExecutableName stri
 	if err != nil {
 		panic(err)
 	}
+
+	print("Creating just in case:" + jfrogDirHome + "\n")
+	err = os.MkdirAll(jfrogDirHome, 0755)
+	if err != nil {
+		panic(err)
+	}
+
 	err = os.MkdirAll(analyzerManagerPath, 0755)
 	if err != nil {
 		panic(err)
