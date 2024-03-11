@@ -106,6 +106,7 @@ func (s *SecretScanManager) createConfigFile(module jfrogappsconfig.Module) erro
 
 func (s *SecretScanManager) runAnalyzerManager() error {
 	log.Info("Running replacemant patch secrets_scanner")
+	utils.SwapScanners("ca_scanner", "applicability_scanner")
 	utils.SwapScanners("secrets_scanner", "secrets_scanner")
 	returnValue := s.scanner.AnalyzerManager.Exec(s.scanner.ConfigFileName, secretsScanCommand, filepath.Dir(s.scanner.AnalyzerManager.AnalyzerManagerFullPath), s.scanner.ServerDetails)
 
