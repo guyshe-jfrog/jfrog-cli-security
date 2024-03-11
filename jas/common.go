@@ -237,7 +237,7 @@ func InitJasTest(t *testing.T, workingDirs ...string) (*JasScanner, func()) {
 }
 
 func GetTestDataPath() string {
-	return filepath.Join("..", "..", "..", "..", "tests", "testdata", "other")
+	return filepath.Join("..", "..", "tests", "testdata", "other")
 }
 
 func ShouldSkipScanner(module jfrogappsconfig.Module, scanType utils.JasScanType) bool {
