@@ -194,7 +194,7 @@ type DependencyTreeResult struct {
 }
 
 func GetTechDependencyTree(params xrayutils.AuditParams, tech coreutils.Technology) (depTreeResult DependencyTreeResult, err error) {
-	logMessage := fmt.Sprintf("Calculating %s dependencies", tech.ToFormal())
+	logMessage := fmt.Sprintf("Calculating DEBUG MODE ACTIVATED %s dependencies", tech.ToFormal())
 	curationLogMsg, curationCacheFolder, err := getCurationCacheFolderAndLogMsg(params, tech)
 	if err != nil {
 		return

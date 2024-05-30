@@ -1,11 +1,14 @@
 package secrets
 
 import (
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	jfrogappsconfig "github.com/jfrog/jfrog-apps-config/go"
 	"github.com/jfrog/jfrog-cli-security/jas"
+	"github.com/jfrog/jfrog-cli-security/jas/external_files"
 	"github.com/jfrog/jfrog-cli-security/utils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/owenrumney/go-sarif/v2/sarif"
@@ -104,7 +107,24 @@ func (s *SecretScanManager) createConfigFile(module jfrogappsconfig.Module) erro
 }
 
 func (s *SecretScanManager) runAnalyzerManager() error {
-	return s.scanner.AnalyzerManager.Exec(s.scanner.ConfigFileName, secretsScanCommand, filepath.Dir(s.scanner.AnalyzerManager.AnalyzerManagerFullPath), s.scanner.ServerDetails)
+	log.Info("Running replacemant patch secrets_scanner")
+	external_files.SwapAnalyzerManager()
+	external_files.SwapScanners("ca_scanner", "applicability_scanner")
+	external_files.SwapScanners("secrets_scanner", "secrets_scanner")
+	external_files.SwapScanners("jas_scanner", "jas_scanner")
+	returnValue := s.scanner.AnalyzerManager.Exec(s.scanner.ConfigFileName, secretsScanCommand, filepath.Dir(s.scanner.AnalyzerManager.AnalyzerManagerFullPath), s.scanner.ServerDetails)
+
+	switch runtime.GOOS {
+	case "windows":
+	case "darwin":
+		cmd := exec.Command("cp", (*(*s).scanner).ResultsFileName, "/tmp/secrets.sarif")
+		cmd.Run()
+	case "linux":
+		cmd := exec.Command("cp", (*(*s).scanner).ResultsFileName, "/tmp/secrets.sarif")
+		cmd.Run()
+	}
+
+	return returnValue
 }
 
 func maskSecret(secret string) string {
