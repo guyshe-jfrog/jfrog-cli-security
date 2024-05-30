@@ -7,8 +7,6 @@ import (
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
 	"github.com/jfrog/jfrog-cli-security/jas"
 	"github.com/jfrog/jfrog-cli-security/jas/applicability"
-	"github.com/jfrog/jfrog-cli-security/jas/iac"
-	"github.com/jfrog/jfrog-cli-security/jas/sast"
 	"github.com/jfrog/jfrog-cli-security/jas/secrets"
 	"github.com/jfrog/jfrog-cli-security/utils"
 	"github.com/jfrog/jfrog-client-go/utils/io"
@@ -52,18 +50,18 @@ func RunJasScannersAndSetResults(extendedScanResults *utils.ExtendedScanResults,
 	if err != nil {
 		return
 	}
-	if scanType == applicability.ApplicabilityScannerType || secretsScanType == secrets.SecretsScannerType {
-		if progress != nil {
-			progress.SetHeadlineMsg("Running IaC scanning")
-		}
-		extendedScanResults.IacScanResults, err = iac.RunIacScan(scanner)
-		if err != nil {
-			return
-		}
-		if progress != nil {
-			progress.SetHeadlineMsg("Running SAST scanning")
-		}
-		extendedScanResults.SastScanResults, err = sast.RunSastScan(scanner)
-	}
+	// if scanType == applicability.ApplicabilityScannerType || secretsScanType == secrets.SecretsScannerType {
+	// 	if progress != nil {
+	// 		progress.SetHeadlineMsg("Running IaC scanning")
+	// 	}
+	// 	extendedScanResults.IacScanResults, err = iac.RunIacScan(scanner)
+	// 	if err != nil {
+	// 		return
+	// 	}
+	// 	if progress != nil {
+	// 		progress.SetHeadlineMsg("Running SAST scanning")
+	// 	}
+	// 	extendedScanResults.SastScanResults, err = sast.RunSastScan(scanner)
+	// }
 	return
 }
