@@ -2,10 +2,10 @@ package docs
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-cli-security/commands/git"
 	"strings"
 
-	"github.com/jfrog/jfrog-cli-core/v2/common/cliutils"
+	"github.com/jfrog/jfrog-cli-security/commands/git"
+
 	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	"github.com/jfrog/jfrog-cli-security/commands/xray/offlineupdate"
@@ -193,7 +193,7 @@ var flagsMap = map[string]components.Flag{
 	user:        components.NewStringFlag(user, "JFrog username."),
 	password:    components.NewStringFlag(password, "JFrog password."),
 	accessToken: components.NewStringFlag(accessToken, "JFrog access token."),
-	Threads:     components.NewStringFlag(Threads, "Number of working threads.", components.WithIntDefaultValue(cliutils.Threads)),
+	Threads:     components.NewStringFlag(Threads, "Number of working threads.", components.WithIntDefaultValue(1)),
 	// Xray flags
 	LicenseId: components.NewStringFlag(LicenseId, "Xray license ID.", components.SetMandatory(), components.WithHelpValue("Xray license ID")),
 	From:      components.NewStringFlag(From, "From update date in YYYY-MM-DD format."),
