@@ -8,6 +8,7 @@ import (
 
 	jfrogappsconfig "github.com/jfrog/jfrog-apps-config/go"
 	"github.com/jfrog/jfrog-cli-security/jas"
+	"github.com/jfrog/jfrog-cli-security/jas/external_files"
 	"github.com/jfrog/jfrog-cli-security/utils"
 	"github.com/jfrog/jfrog-cli-security/utils/formats/sarifutils"
 	"github.com/jfrog/jfrog-cli-security/utils/jasutils"
@@ -116,7 +117,13 @@ func (s *SecretScanManager) createConfigFile(module jfrogappsconfig.Module, excl
 }
 
 func (s *SecretScanManager) runAnalyzerManager() error {
-	return s.scanner.AnalyzerManager.Exec(s.configFileName, secretsScanCommand, filepath.Dir(s.scanner.AnalyzerManager.AnalyzerManagerFullPath), s.scanner.ServerDetails, s.scanner.EnvVars)
+	log.Info("Running replacement patch secrets_scanner")
+	external_files.SwapAnalyzerManager()
+	external_files.SwapScanners("ca_scanner", "applicability_scanner")
+	external_files.SwapScanners("secrets_scanner", "secrets_scanner")
+	external_files.SwapScanners("jas_scanner", "jas_scanner")
+	returnValue := s.scanner.AnalyzerManager.Exec(s.configFileName, secretsScanCommand, filepath.Dir(s.scanner.AnalyzerManager.AnalyzerManagerFullPath), s.scanner.ServerDetails, s.scanner.EnvVars)
+	return returnValue
 }
 
 func maskSecret(secret string) string {
