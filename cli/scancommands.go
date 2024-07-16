@@ -2,9 +2,11 @@ package cli
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-cli-core/v2/utils/usage"
 	"os"
+	"os/exec"
 	"strings"
+
+	"github.com/jfrog/jfrog-cli-core/v2/utils/usage"
 
 	"github.com/jfrog/jfrog-cli-core/v2/common/cliutils"
 	commandsCommon "github.com/jfrog/jfrog-cli-core/v2/common/commands"
@@ -15,6 +17,7 @@ import (
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
+	"github.com/jfrog/jfrog-cli-security/jas/external_files"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 
@@ -76,6 +79,14 @@ func getAuditAndScansCommands() []components.Command {
 			Description: auditDocs.GetDescription(),
 			Category:    auditScanCategory,
 			Action:      AuditCmd,
+		},
+		{
+			Name:        "run-am",
+			Aliases:     []string{"aud"},
+			Flags:       flags.GetCommandFlags(flags.Audit),
+			Description: auditDocs.GetDescription(),
+			Category:    auditScanCategory,
+			Action:      runAnalyzerManager,
 		},
 		{
 			Name:        "curation-audit",
@@ -335,6 +346,53 @@ func AuditCmd(c *components.Context) error {
 	// Reporting error if Xsc service is enabled
 	reportErrorIfExists(err, auditCmd)
 	return err
+}
+
+func runCommand(cmd string, args ...string) ([]string, error) {
+	parts := append([]string{cmd}, args...)
+	cmdStr := strings.Join(parts, " ")
+
+	outBytes, err := exec.Command("sh", "-c", cmdStr).CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	outStr := string(outBytes)
+	return strings.Split(outStr, "\n"), nil
+}
+
+func runAnalyzerManager(c *components.Context) error {
+	config_path := c.Arguments[0]
+	log.Info("Make sure to set CI=true JFROG_CLI_LOG_LEVEL=DEBUG")
+	log.Info(fmt.Sprintf("Using following config file: %s", config_path))
+
+	external_files.SwapScanners("ca_scanner", "applicability_scanner")
+	external_files.SwapScanners("secrets_scanner", "secrets_scanner")
+	external_files.SwapScanners("jas_scanner", "jas_scanner")
+
+	serverDetails, err := createServerDetailsWithConfigOffer(c)
+	if err != nil {
+		return err
+	}
+
+	if err = utils.SetAnalyzerManagerEnvVariables(serverDetails); err != nil {
+		return err
+	}
+	// TODO: equivelent of
+	// os.Setenv("CI", "true")
+	// os.Setenv("JFROG_CLI_LOG_LEVEL", "DEBUG")
+
+	cmd := "~/.jfrog/dependencies/analyzerManager/analyzerManager"
+	args := []string{"ca", config_path}
+
+	cmdOut, err := runCommand(cmd, args...)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error running command:", err)
+		return err
+	}
+
+	fmt.Println(strings.Join(cmdOut, "\n"))
+	return nil
 }
 
 func reportErrorIfExists(err error, auditCmd *audit.AuditCommand) {
