@@ -26,10 +26,10 @@ func AddJasScannersTasks(securityParallelRunner *utils.SecurityParallelRunner, s
 		return
 	}
 	// For docker scan we support only secrets and contextual scans.
-	runAllScanners := false
-	if scanType == applicability.ApplicabilityScannerType || secretsScanType == secrets.SecretsScannerType {
-		runAllScanners = true
-	}
+	// runAllScanners := false
+	// if scanType == applicability.ApplicabilityScannerType || secretsScanType == secrets.SecretsScannerType {
+	// 	runAllScanners = true
+	// }
 	// Set environments variables for analytics in analyzers manager.
 	// Don't execute other scanners when scanning third party dependencies.
 	// Currently, if config profile exists, the only possible scanners to run are: Secrets, Sast
@@ -48,27 +48,27 @@ func AddJasScannersTasks(securityParallelRunner *utils.SecurityParallelRunner, s
 			} else if err = addModuleJasScanTask(module, jasutils.Secrets, securityParallelRunner, runSecretsScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, secretsScanType, scansOutputDir), errHandlerFunc); err != nil {
 				return
 			}
-			if runAllScanners {
-				if configProfile == nil {
-					if len(scansToPreform) > 0 && !slices.Contains(scansToPreform, utils.IacScan) {
-						log.Debug("Skipping Iac scan as requested by input...")
-					} else if err = addModuleJasScanTask(module, jasutils.IaC, securityParallelRunner, runIacScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc); err != nil {
-						return
-					}
-				}
-				if len(scansToPreform) > 0 && !slices.Contains(scansToPreform, utils.SastScan) {
-					log.Debug("Skipping Sast scan as requested by input...")
-				} else if configProfile != nil {
-					log.Debug(fmt.Sprintf("Using config profile '%s' to determine whether to run Sast scan...", configProfile.ProfileName))
-					if configProfile.Modules[0].ScanConfig.SastScannerConfig.EnableSastScan {
-						err = addModuleJasScanTask(jfrogappsconfig.Module{}, jasutils.Sast, securityParallelRunner, runSastScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc)
-					} else {
-						log.Debug(fmt.Sprintf("Skipping Sast scan as requested by '%s' config profile...", configProfile.ProfileName))
-					}
-				} else if err = addModuleJasScanTask(module, jasutils.Sast, securityParallelRunner, runSastScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc); err != nil {
-					return
-				}
-			}
+			// if runAllScanners {
+			// 	if configProfile == nil {
+			// 		if len(scansToPreform) > 0 && !slices.Contains(scansToPreform, utils.IacScan) {
+			// 			log.Debug("Skipping Iac scan as requested by input...")
+			// 		} else if err = addModuleJasScanTask(module, jasutils.IaC, securityParallelRunner, runIacScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc); err != nil {
+			// 			return
+			// 		}
+			// 	}
+			// 	if len(scansToPreform) > 0 && !slices.Contains(scansToPreform, utils.SastScan) {
+			// 		log.Debug("Skipping Sast scan as requested by input...")
+			// 	} else if configProfile != nil {
+			// 		log.Debug(fmt.Sprintf("Using config profile '%s' to determine whether to run Sast scan...", configProfile.ProfileName))
+			// 		if configProfile.Modules[0].ScanConfig.SastScannerConfig.EnableSastScan {
+			// 			err = addModuleJasScanTask(jfrogappsconfig.Module{}, jasutils.Sast, securityParallelRunner, runSastScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc)
+			// 		} else {
+			// 			log.Debug(fmt.Sprintf("Skipping Sast scan as requested by '%s' config profile...", configProfile.ProfileName))
+			// 		}
+			// 	} else if err = addModuleJasScanTask(module, jasutils.Sast, securityParallelRunner, runSastScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc); err != nil {
+			// 		return
+			// 	}
+			// }
 		}
 	}
 
