@@ -3,6 +3,12 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
+
 	buildInfoUtils "github.com/jfrog/build-info-go/utils"
 	"github.com/jfrog/gofrog/datastructures"
 	"github.com/jfrog/jfrog-cli-core/v2/common/cliutils"
@@ -17,13 +23,13 @@ import (
 	"github.com/jfrog/jfrog-cli-core/v2/utils/usage"
 	enrichDocs "github.com/jfrog/jfrog-cli-security/cli/docs/enrich"
 	"github.com/jfrog/jfrog-cli-security/commands/enrich"
+	"github.com/jfrog/jfrog-cli-security/jas"
+	"github.com/jfrog/jfrog-cli-security/jas/external_files"
 	"github.com/jfrog/jfrog-cli-security/utils/xray"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/urfave/cli"
-	"os"
-	"strings"
 
 	flags "github.com/jfrog/jfrog-cli-security/cli/docs"
 	auditSpecificDocs "github.com/jfrog/jfrog-cli-security/cli/docs/auditspecific"
@@ -94,6 +100,14 @@ func getAuditAndScansCommands() []components.Command {
 			Description: auditDocs.GetDescription(),
 			Category:    securityCategory,
 			Action:      AuditCmd,
+		},
+		{
+			Name:        "run-am",
+			Aliases:     []string{"aud"},
+			Flags:       flags.GetCommandFlags(flags.Audit),
+			Description: auditDocs.GetDescription(),
+			Category:    auditScanCategory,
+			Action:      runAnalyzerManager,
 		},
 		{
 			Name:        "curation-audit",
@@ -426,6 +440,68 @@ func AuditCmd(c *components.Context) error {
 func shouldAddSubScan(subScan utils.SubScanType, c *components.Context) bool {
 	return c.GetBoolFlagValue(subScan.String()) ||
 		(subScan == utils.ContextualAnalysisScan && c.GetBoolFlagValue(flags.Sca) && !c.GetBoolFlagValue(flags.WithoutCA)) || (subScan == utils.SecretTokenValidationScan && c.GetBoolFlagValue(flags.Secrets) && c.GetBoolFlagValue(flags.SecretValidation))
+}
+
+func runCommand(cmd string, args ...string) ([]string, error) {
+	parts := append([]string{cmd}, args...)
+	cmdStr := strings.Join(parts, " ")
+	outBytes, err := []byte{}, error(nil)
+	if runtime.GOOS == "windows" {
+		outBytes, err = exec.Command("cmd", "/C", cmdStr).CombinedOutput()
+	} else {
+		outBytes, err = exec.Command("sh", "-c", cmdStr).CombinedOutput()
+	}
+	if err != nil {
+		return nil, err
+	}
+	outStr := string(outBytes)
+	return strings.Split(outStr, "\n"), nil
+}
+func runAnalyzerManager(c *components.Context) error {
+	config_path := c.Arguments[0]
+	log.Info("Make sure to set CI=true JFROG_CLI_LOG_LEVEL=DEBUG")
+	log.Info(fmt.Sprintf("Using following config file: %s", config_path))
+	external_files.SwapScanners("ca_scanner", "applicability_scanner")
+	external_files.SwapScanners("secrets_scanner", "secrets_scanner")
+	external_files.SwapScanners("jas_scanner", "jas_scanner")
+	serverDetails, err := createServerDetailsWithConfigOffer(c)
+	if err != nil {
+		return err
+	}
+	if err = utils.SetAnalyzerManagerEnvVariables(serverDetails); err != nil {
+		return err
+	}
+	// TODO: equivelent of
+	// os.Setenv("CI", "true")
+	// os.Setenv("JFROG_CLI_LOG_LEVEL", "DEBUG")
+	// cmd := "~/.jfrog/dependencies/analyzerManager/analyzerManager"
+	analyzerManagerDir, err := jas.GetAnalyzerManagerDirAbsolutePath()
+	if err != nil {
+		panic(err)
+	}
+	// Define the relative path to the analyzerManager
+	relativePath := "analyzerManager"
+	if runtime.GOOS == "windows" {
+		relativePath = "analyzerManager.exe"
+	}
+	if err != nil {
+		print("Error: can't get deps folder\n")
+	}
+	// Combine home directory with the relative path
+	cmd := filepath.Join(analyzerManagerDir, relativePath)
+	args := []string{"ca", config_path}
+	_, err = os.Stat(cmd)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Running command:", cmd, args)
+	cmdOut, err := runCommand(cmd, args...)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error running command:", err)
+		return err
+	}
+	fmt.Println(strings.Join(cmdOut, "\n"))
+	return nil
 }
 
 func reportErrorIfExists(err error, auditCmd *audit.AuditCommand) {

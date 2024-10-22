@@ -141,6 +141,34 @@ func isCI() bool {
 	return strings.ToLower(os.Getenv(coreutils.CI)) == "true"
 }
 
+func SetAnalyzerManagerEnvVariables(serverDetails *config.ServerDetails) error {
+	if serverDetails == nil {
+		return errors.New("cant get xray server details")
+	}
+	if err := os.Setenv(jfUserEnvVariable, serverDetails.User); errorutils.CheckError(err) != nil {
+		return err
+	}
+	if err := os.Setenv(jfPasswordEnvVariable, serverDetails.Password); errorutils.CheckError(err) != nil {
+		return err
+	}
+	if err := os.Setenv(jfPlatformUrlEnvVariable, serverDetails.Url); errorutils.CheckError(err) != nil {
+		return err
+	}
+	if err := os.Setenv(jfTokenEnvVariable, serverDetails.AccessToken); errorutils.CheckError(err) != nil {
+		return err
+	}
+	if isCI() {
+		analyzerManagerLogFolder, err := coreutils.CreateDirInJfrogHome(filepath.Join(coreutils.JfrogLogsDirName, analyzerManagerLogDirName))
+		if err != nil {
+			return err
+		}
+		if err = os.Setenv(logDirEnvVariable, analyzerManagerLogFolder); errorutils.CheckError(err) != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func GetAnalyzerManagerEnvVariables(serverDetails *config.ServerDetails) (envVars map[string]string, err error) {
 	envVars = map[string]string{
 		jfUserEnvVariable:        serverDetails.User,
