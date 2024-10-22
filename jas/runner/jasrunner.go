@@ -3,6 +3,7 @@ package runner
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/jfrog/gofrog/parallel"
 	jfrogappsconfig "github.com/jfrog/jfrog-apps-config/go"
 	"github.com/jfrog/jfrog-cli-security/jas"
@@ -48,27 +49,27 @@ func AddJasScannersTasks(securityParallelRunner *utils.SecurityParallelRunner, s
 			} else if err = addModuleJasScanTask(module, jasutils.Secrets, securityParallelRunner, runSecretsScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, secretsScanType, scansOutputDir), errHandlerFunc); err != nil {
 				return
 			}
-			if runAllScanners {
-				if configProfile == nil {
-					if len(scansToPreform) > 0 && !slices.Contains(scansToPreform, utils.IacScan) {
-						log.Debug("Skipping Iac scan as requested by input...")
-					} else if err = addModuleJasScanTask(module, jasutils.IaC, securityParallelRunner, runIacScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc); err != nil {
-						return
-					}
-				}
-				if len(scansToPreform) > 0 && !slices.Contains(scansToPreform, utils.SastScan) {
-					log.Debug("Skipping Sast scan as requested by input...")
-				} else if configProfile != nil {
-					log.Debug(fmt.Sprintf("Using config profile '%s' to determine whether to run Sast scan...", configProfile.ProfileName))
-					if configProfile.Modules[0].ScanConfig.SastScannerConfig.EnableSastScan {
-						err = addModuleJasScanTask(jfrogappsconfig.Module{}, jasutils.Sast, securityParallelRunner, runSastScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc)
-					} else {
-						log.Debug(fmt.Sprintf("Skipping Sast scan as requested by '%s' config profile...", configProfile.ProfileName))
-					}
-				} else if err = addModuleJasScanTask(module, jasutils.Sast, securityParallelRunner, runSastScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc); err != nil {
-					return
-				}
-			}
+			// if runAllScanners {
+			// 	if configProfile == nil {
+			// 		if len(scansToPreform) > 0 && !slices.Contains(scansToPreform, utils.IacScan) {
+			// 			log.Debug("Skipping Iac scan as requested by input...")
+			// 		} else if err = addModuleJasScanTask(module, jasutils.IaC, securityParallelRunner, runIacScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc); err != nil {
+			// 			return
+			// 		}
+			// 	}
+			// 	if len(scansToPreform) > 0 && !slices.Contains(scansToPreform, utils.SastScan) {
+			// 		log.Debug("Skipping Sast scan as requested by input...")
+			// 	} else if configProfile != nil {
+			// 		log.Debug(fmt.Sprintf("Using config profile '%s' to determine whether to run Sast scan...", configProfile.ProfileName))
+			// 		if configProfile.Modules[0].ScanConfig.SastScannerConfig.EnableSastScan {
+			// 			err = addModuleJasScanTask(jfrogappsconfig.Module{}, jasutils.Sast, securityParallelRunner, runSastScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc)
+			// 		} else {
+			// 			log.Debug(fmt.Sprintf("Skipping Sast scan as requested by '%s' config profile...", configProfile.ProfileName))
+			// 		}
+			// 	} else if err = addModuleJasScanTask(module, jasutils.Sast, securityParallelRunner, runSastScan(securityParallelRunner, scanner, scanResults.ExtendedScanResults, module, scansOutputDir), errHandlerFunc); err != nil {
+			// 		return
+			// 	}
+			// }
 		}
 	}
 
