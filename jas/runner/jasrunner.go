@@ -27,10 +27,10 @@ func AddJasScannersTasks(securityParallelRunner *utils.SecurityParallelRunner, s
 		return
 	}
 	// For docker scan we support only secrets and contextual scans.
-	runAllScanners := false
-	if scanType == applicability.ApplicabilityScannerType || secretsScanType == secrets.SecretsScannerType {
-		runAllScanners = true
-	}
+	// runAllScanners := false
+	// if scanType == applicability.ApplicabilityScannerType || secretsScanType == secrets.SecretsScannerType {
+	// 	runAllScanners = true
+	// }
 	// Set environments variables for analytics in analyzers manager.
 	// Don't execute other scanners when scanning third party dependencies.
 	// Currently, if config profile exists, the only possible scanners to run are: Secrets, Sast

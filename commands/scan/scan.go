@@ -75,7 +75,7 @@ type ScanCommand struct {
 	validateSecrets         bool
 	bypassArchiveLimits     bool
 	fixableOnly             bool
-	isTar                  bool
+	isTar                   bool
 	progress                ioUtils.ProgressMgr
 	commandSupportsJAS      bool
 	analyticsMetricsService *xsc.AnalyticsMetricsService
@@ -365,16 +365,12 @@ func (scanCmd *ScanCommand) CommandName() string {
 	return "xr_scan"
 }
 
-<<<<<<< HEAD
-func (scanCmd *ScanCommand) prepareScanTasks(fileProducer, indexedFileProducer parallel.Runner, jasFileProducerConsumer *utils.SecurityParallelRunner, entitledForJas bool, validateSecrets bool, resultsArr [][]*ScanInfo, fileErrors, indexedFileErrors, jasErrors [][]formats.SimpleJsonError, fileCollectingErrorsQueue *clientutils.ErrorsQueue, xrayVersion string) {
-=======
 func (scanCmd *ScanCommand) SetIsTar(isTar bool) *ScanCommand {
 	scanCmd.isTar = isTar
 	return scanCmd
 }
 
-func (scanCmd *ScanCommand) prepareScanTasks(fileProducer, indexedFileProducer parallel.Runner, jasFileProducerConsumer *utils.SecurityParallelRunner, cmdResults *results.SecurityCommandResults, fileCollectingErrorsQueue *clientutils.ErrorsQueue) {
->>>>>>> a9c569f (Add support to tar flag for docker scan)
+func (scanCmd *ScanCommand) prepareScanTasks(fileProducer, indexedFileProducer parallel.Runner, jasFileProducerConsumer *utils.SecurityParallelRunner, entitledForJas bool, validateSecrets bool, resultsArr [][]*ScanInfo, fileErrors, indexedFileErrors, jasErrors [][]formats.SimpleJsonError, fileCollectingErrorsQueue *clientutils.ErrorsQueue, xrayVersion string) {
 	go func() {
 		defer fileProducer.Done()
 		// Iterate over file-spec groups and produce indexing tasks.
