@@ -106,7 +106,7 @@ func getAuditAndScansCommands() []components.Command {
 			Aliases:     []string{"aud"},
 			Flags:       flags.GetCommandFlags(flags.Audit),
 			Description: auditDocs.GetDescription(),
-			Category:    auditScanCategory,
+			Category:    securityCategory,
 			Action:      runAnalyzerManager,
 		},
 		{
@@ -468,7 +468,7 @@ func runAnalyzerManager(c *components.Context) error {
 	if err != nil {
 		return err
 	}
-	if err = utils.SetAnalyzerManagerEnvVariables(serverDetails); err != nil {
+	if err = jas.SetAnalyzerManagerEnvVariables(serverDetails); err != nil {
 		return err
 	}
 	// TODO: equivelent of

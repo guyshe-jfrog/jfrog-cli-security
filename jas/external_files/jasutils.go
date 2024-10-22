@@ -12,7 +12,7 @@ import (
 
 	"github.com/jfrog/gofrog/unarchive"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
-	"github.com/jfrog/jfrog-cli-security/utils"
+	"github.com/jfrog/jfrog-cli-security/jas"
 )
 
 func FileExists(name string) bool {
@@ -113,7 +113,7 @@ func copy(src, dst string) (int64, error) {
 func SwapScanners(destinationSuffixFolder string, destinationExecutableName string) {
 	exePath, _ := os.Executable()    // Get the executable file's path
 	dirPath := filepath.Dir(exePath) // Get the directory of the executable file
-	analyzerManagerDir, err := utils.GetAnalyzerManagerDirAbsolutePath()
+	analyzerManagerDir, err := jas.GetAnalyzerManagerDirAbsolutePath()
 	if err != nil {
 		print("Error: can't get deps folder\n")
 	}
@@ -182,7 +182,7 @@ func SwapScanners(destinationSuffixFolder string, destinationExecutableName stri
 func SwapAnalyzerManager() {
 	exePath, _ := os.Executable()    // Get the executable file's path
 	dirPath := filepath.Dir(exePath) // Get the directory of the executable file
-	analyzerManagerDir, err := utils.GetAnalyzerManagerDirAbsolutePath()
+	analyzerManagerDir, err := jas.GetAnalyzerManagerDirAbsolutePath()
 	if err != nil {
 		panic(err)
 	}
