@@ -725,6 +725,7 @@ func DockerScan(c *components.Context, image string) error {
 		SetProject(getProject(c)).
 		SetIncludeVulnerabilities(c.GetBoolFlagValue(flags.Vuln) || shouldIncludeVulnerabilities(c)).
 		SetIncludeLicenses(c.GetBoolFlagValue(flags.Licenses)).
+		SetIsTar(c.GetBoolFlagValue(flags.UseTar)).
 		SetFail(c.GetBoolFlagValue(flags.Fail)).
 		SetPrintExtendedTable(c.GetBoolFlagValue(flags.ExtendedTable)).
 		SetBypassArchiveLimits(c.GetBoolFlagValue(flags.BypassArchiveLimits)).
