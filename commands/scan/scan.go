@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jfrog/jfrog-cli-security/utils/xsc"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/jfrog/jfrog-cli-security/utils/xsc"
 
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
@@ -74,6 +75,7 @@ type ScanCommand struct {
 	validateSecrets         bool
 	bypassArchiveLimits     bool
 	fixableOnly             bool
+	isTar                   bool
 	progress                ioUtils.ProgressMgr
 	commandSupportsJAS      bool
 	analyticsMetricsService *xsc.AnalyticsMetricsService
@@ -361,6 +363,11 @@ func NewScanCommand() *ScanCommand {
 
 func (scanCmd *ScanCommand) CommandName() string {
 	return "xr_scan"
+}
+
+func (scanCmd *ScanCommand) SetIsTar(isTar bool) *ScanCommand {
+	scanCmd.isTar = isTar
+	return scanCmd
 }
 
 func (scanCmd *ScanCommand) prepareScanTasks(fileProducer, indexedFileProducer parallel.Runner, jasFileProducerConsumer *utils.SecurityParallelRunner, entitledForJas bool, validateSecrets bool, resultsArr [][]*ScanInfo, fileErrors, indexedFileErrors, jasErrors [][]formats.SimpleJsonError, fileCollectingErrorsQueue *clientutils.ErrorsQueue, xrayVersion string) {
