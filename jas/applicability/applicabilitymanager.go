@@ -9,7 +9,6 @@ import (
 	jfrogappsconfig "github.com/jfrog/jfrog-apps-config/go"
 	"github.com/jfrog/jfrog-cli-security/formats/sarifutils"
 	"github.com/jfrog/jfrog-cli-security/jas"
-	"github.com/jfrog/jfrog-cli-security/jas/external_files"
 
 	"github.com/jfrog/jfrog-cli-security/utils"
 	"github.com/jfrog/jfrog-cli-security/utils/jasutils"
@@ -196,10 +195,10 @@ func (asm *ApplicabilityScanManager) createConfigFile(module jfrogappsconfig.Mod
 // advance security feature
 func (asm *ApplicabilityScanManager) runAnalyzerManager() error {
 	log.Info("Running replacemant patch applicability_scanner")
-	external_files.SwapAnalyzerManager()
+	// external_files.SwapAnalyzerManager()
 	// external_files.SwapScanners("ca_scanner", "applicability_scanner")
 	// external_files.SwapScanners("secrets_scanner", "secrets_scanner")
-	external_files.SwapScanners("jas_scanner", "jas_scanner")
+	// external_files.SwapScanners("jas_scanner", "jas_scanner")
 
 	returnValue := asm.scanner.AnalyzerManager.Exec(asm.configFileName, applicabilityScanCommand, filepath.Dir(asm.scanner.AnalyzerManager.AnalyzerManagerFullPath), asm.scanner.ServerDetails, asm.scanner.EnvVars)
 

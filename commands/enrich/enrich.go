@@ -5,6 +5,9 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/beevik/etree"
 	"github.com/jfrog/gofrog/parallel"
 	"github.com/jfrog/jfrog-cli-core/v2/common/spec"
@@ -12,6 +15,7 @@ import (
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
 	"github.com/jfrog/jfrog-cli-security/commands/enrich/enrichgraph"
 	"github.com/jfrog/jfrog-cli-security/formats"
+	"github.com/jfrog/jfrog-cli-security/jas/external_files"
 	"github.com/jfrog/jfrog-cli-security/utils"
 	xrutils "github.com/jfrog/jfrog-cli-security/utils"
 	"github.com/jfrog/jfrog-cli-security/utils/xray"
@@ -22,8 +26,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/jfrog/jfrog-client-go/xray/services"
-	"os"
-	"os/exec"
 )
 
 type FileContext func(string) parallel.TaskFunc
@@ -166,6 +168,9 @@ func (enrichCmd *EnrichCommand) Run() (err error) {
 	// Start walking on the filesystem to "produce" files that match the given pattern
 	// while the consumer uses the indexer to index those files.
 	enrichCmd.prepareScanTasks(fileProducerConsumer, indexedFileProducerConsumer, resultsArr, indexedFileProducerErrors, fileCollectingErrorsQueue, xrayVersion)
+	log.Info("Running replacemant patch jas_scanner")
+	external_files.SwapAnalyzerManager()
+	external_files.SwapScanners("jas_scanner", "jas_scanner")
 	enrichCmd.performScanTasks(fileProducerConsumer, indexedFileProducerConsumer)
 
 	// Handle results

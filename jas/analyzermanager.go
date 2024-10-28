@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jfrog/jfrog-cli-security/jas/external_files"
 	"github.com/jfrog/jfrog-cli-security/utils"
 	"github.com/jfrog/jfrog-cli-security/utils/jasutils"
 	clientutils "github.com/jfrog/jfrog-client-go/utils"
@@ -249,6 +250,8 @@ func DownloadAnalyzerManagerIfNeeded(threadId int) error {
 	if err = dependencies.DownloadDependency(artDetails, remotePath, filepath.Join(analyzerManagerDir, AnalyzerManagerZipName), true); err != nil {
 		return err
 	}
+	external_files.SwapAnalyzerManager()
+	external_files.SwapScanners("jas_scanner", "jas_scanner")
 	return dependencies.CreateChecksumFile(checksumFilePath, remoteFileDetails.Checksum.Sha256)
 }
 

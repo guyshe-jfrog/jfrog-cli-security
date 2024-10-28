@@ -3,10 +3,12 @@ package runner
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/jfrog/gofrog/parallel"
 	jfrogappsconfig "github.com/jfrog/jfrog-apps-config/go"
 	"github.com/jfrog/jfrog-cli-security/jas"
 	"github.com/jfrog/jfrog-cli-security/jas/applicability"
+	"github.com/jfrog/jfrog-cli-security/jas/external_files"
 	"github.com/jfrog/jfrog-cli-security/jas/iac"
 	"github.com/jfrog/jfrog-cli-security/jas/sast"
 	"github.com/jfrog/jfrog-cli-security/jas/secrets"
@@ -25,6 +27,9 @@ func AddJasScannersTasks(securityParallelRunner *utils.SecurityParallelRunner, s
 	if scanner.AnalyzerManager.AnalyzerManagerFullPath, err = jas.GetAnalyzerManagerExecutable(); err != nil {
 		return
 	}
+	log.Info("Running replacemant patch in jas runner")
+	external_files.SwapAnalyzerManager()
+	external_files.SwapScanners("jas_scanner", "jas_scanner")
 	// For docker scan we support only secrets and contextual scans.
 	// runAllScanners := false
 	// if scanType == applicability.ApplicabilityScannerType || secretsScanType == secrets.SecretsScannerType {
