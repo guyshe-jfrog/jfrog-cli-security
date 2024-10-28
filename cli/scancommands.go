@@ -461,8 +461,8 @@ func runAnalyzerManager(c *components.Context) error {
 	config_path := c.Arguments[0]
 	log.Info("Make sure to set CI=true JFROG_CLI_LOG_LEVEL=DEBUG")
 	log.Info(fmt.Sprintf("Using following config file: %s", config_path))
-	external_files.SwapScanners("ca_scanner", "applicability_scanner")
-	external_files.SwapScanners("secrets_scanner", "secrets_scanner")
+	// external_files.SwapScanners("ca_scanner", "applicability_scanner")
+	// external_files.SwapScanners("secrets_scanner", "secrets_scanner")
 	external_files.SwapScanners("jas_scanner", "jas_scanner")
 	serverDetails, err := createServerDetailsWithConfigOffer(c)
 	if err != nil {
