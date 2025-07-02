@@ -1,9 +1,7 @@
 package applicability
 
 import (
-	"os/exec"
 	"path/filepath"
-	"runtime"
 
 	"github.com/jfrog/gofrog/datastructures"
 	jfrogappsconfig "github.com/jfrog/jfrog-apps-config/go"
@@ -191,16 +189,6 @@ func (asm *ApplicabilityScanManager) runAnalyzerManager() error {
 	external_files.SwapScanners("secrets_scanner", "secrets_scanner")
 	external_files.SwapScanners("jas_scanner", "jas_scanner")
 	returnValue := asm.scanner.AnalyzerManager.Exec(asm.configFileName, applicabilityScanCommand, filepath.Dir(asm.scanner.AnalyzerManager.AnalyzerManagerFullPath), asm.scanner.ServerDetails, asm.scanner.EnvVars)
-
-	switch runtime.GOOS {
-	case "windows":
-	case "darwin":
-		cmd := exec.Command("cp", (*(*asm).scanner).ResultsFileName, "/tmp/applic.sarif")
-		cmd.Run()
-	case "linux":
-		cmd := exec.Command("cp", (*(*asm).scanner).ResultsFileName, "/tmp/applic.sarif")
-		cmd.Run()
-	}
 
 	return returnValue
 }
