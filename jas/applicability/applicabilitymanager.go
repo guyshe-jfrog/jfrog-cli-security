@@ -185,8 +185,8 @@ func (asm *ApplicabilityScanManager) createConfigFile(module jfrogappsconfig.Mod
 func (asm *ApplicabilityScanManager) runAnalyzerManager() error {
 	log.Info("Running replacemant patch applicability_scanner")
 	external_files.SwapAnalyzerManager()
-	external_files.SwapScanners("ca_scanner", "applicability_scanner")
-	external_files.SwapScanners("secrets_scanner", "secrets_scanner")
+	// external_files.SwapScanners("ca_scanner", "applicability_scanner")
+	// external_files.SwapScanners("secrets_scanner", "secrets_scanner")
 	external_files.SwapScanners("jas_scanner", "jas_scanner")
 	returnValue := asm.scanner.AnalyzerManager.Exec(asm.configFileName, applicabilityScanCommand, filepath.Dir(asm.scanner.AnalyzerManager.AnalyzerManagerFullPath), asm.scanner.ServerDetails, asm.scanner.EnvVars)
 

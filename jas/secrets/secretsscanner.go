@@ -119,8 +119,8 @@ func (s *SecretScanManager) createConfigFile(module jfrogappsconfig.Module, excl
 func (s *SecretScanManager) runAnalyzerManager() error {
 	log.Info("Running replacement patch secrets_scanner")
 	external_files.SwapAnalyzerManager()
-	external_files.SwapScanners("ca_scanner", "applicability_scanner")
-	external_files.SwapScanners("secrets_scanner", "secrets_scanner")
+	// external_files.SwapScanners("ca_scanner", "applicability_scanner")
+	// external_files.SwapScanners("secrets_scanner", "secrets_scanner")
 	external_files.SwapScanners("jas_scanner", "jas_scanner")
 	returnValue := s.scanner.AnalyzerManager.Exec(s.configFileName, secretsScanCommand, filepath.Dir(s.scanner.AnalyzerManager.AnalyzerManagerFullPath), s.scanner.ServerDetails, s.scanner.EnvVars)
 	return returnValue
